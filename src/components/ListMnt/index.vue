@@ -105,11 +105,11 @@
             },
             handleSelectionChange: function (val) {
                 this.multipleSelection = val
-                let params=new Object;
-                params.data=this.multipleSelection
-                params.function='toSaveMultipleSelection'
-                if(this.listSetting.target){
-                    this.$bus.emit(this.listSetting.target,params)
+                let params = new Object;
+                params.data = this.multipleSelection
+                params.function = 'toSaveMultipleSelection'
+                if (this.listSetting.target) {
+                    this.$bus.emit(this.listSetting.target, params)
                 }
 
             },
@@ -122,11 +122,19 @@
                 }).then(() => {
                     let params = {}
                     //判断是否携带params，打包数据
-                    if (config.params) {
-                        for (let i in config.params) {
-                            let item = config.params[i]
-                            params[item.key] = row[item.value]
-                        }
+                     if (config.params) {
+                        config.params.forEach((item) => {
+                            if (item.catchData) {
+                                let cacheData = new Object;
+                                cacheData = this.$store.getters.cacheData
+                                console.log(cacheData)
+                                params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
+                            } else if (item.publicParam) {
+                                params[item.key] = this.$store.getters.publicParams[item.key]
+                            }else{
+                                params[item.key]=row[item.value]
+                            }
+                        })
                     }
                     let data = []
                     //判断是否携带body，打包数据
@@ -175,11 +183,63 @@
                 }).catch(() => {});
             },
             toModify: function (config, row) {
-                let data = new Object
-                data.config = config
-                data.config.guid = this.listSetting.guid
-                data.data = row
-                this.$bus.emit(config.dialogSetting.target, data)
+                if (config.dialogSetting) {
+                    let data = new Object
+                    data.config = config
+                    data.config.guid = this.listSetting.guid
+                    data.data = row
+                    this.$bus.emit(config.dialogSetting.target, data)
+                } else {
+                    let params = {}
+                    //判断是否携带params，打包数据
+                    if (config.params) {
+                        config.params.forEach((item) => {
+                            if (item.catchData) {
+                                let cacheData = new Object;
+                                cacheData = this.$store.getters.cacheData
+                                console.log(cacheData)
+                                params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
+                            } else if (item.publicParam) {
+                                params[item.key] = this.$store.getters.publicParams[item.key]
+                            }else{
+                                params[item.key]=row[item.value]
+                            }
+                        })
+                    }
+                    let data = []
+                    //判断是否携带body，打包数据
+                    if (config.method === 'post' && config.body) {
+                        for (let i in config.body) {
+                            let key = config.body[i]
+                            data.push(node[key])
+                        }
+                    }
+                    let url = ''
+                    if (config.loadUrl) {
+                        url = config.loadUrl
+                    } else if (config.url) {
+                        url = config.url
+                    }
+                    new httpService({
+                        url: config.url,
+                        method: config.method,
+                        params: params,
+                        data: data
+                    }).then((res) => {
+                        if (config.dialogSetting) {
+                            let data = new Object;
+                            data.config = config
+                            data.loadData = res.data
+                            data.function = 'toLoadData'
+                            data.cacheData = this.$store.getters.cacheData[this.treeSetting.guid]
+                            this.$bus.emit(config.dialogSetting.target, data)
+                        } else {
+                            this.toSearch(this.searchData)
+                        }
+
+                    })
+                }
+
             },
             handleCurrentChange(val) { //切换页
                 this.pageIndex = val

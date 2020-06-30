@@ -52,12 +52,16 @@ service.interceptors.response.use(
         })
         break;
       case 'fail':
+        
         Message({
           message: res.message || 'Error',
           type: 'error',
           duration: 5 * 1000
         })
         return Promise.reject(res.message)
+        break;
+        case'400':
+        console.log(400)
         break;
       default:
         Message({
@@ -69,11 +73,11 @@ service.interceptors.response.use(
   },
   error => {
     console.log('err:' + error)
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
+    // Message({
+    //   message: error.message,
+    //   type: 'error',
+    //   duration: 5 * 1000
+    // })
     return Promise.reject(error)
   }
 )
@@ -125,7 +129,7 @@ class httpService {
       }).then((res) => {
         resolve(res)
       }).catch((err) => {
-        reject(err)
+        // reject(err)
       })
     })
   }

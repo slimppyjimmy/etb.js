@@ -179,7 +179,8 @@
                     autoSearch: false,
                     guid: '95050e27-0967-40a4-8d8c-bea8bf1bb804',
                     target: 'a05f0c73-4e43-455f-9d87-9db78cdac8a6',
-                    properties: [{
+                    properties: [
+                        {
                         name: "添加管理员",
                         type: "button",
                         // url: 'dasc/realmManagers/prepareUsers',
@@ -189,7 +190,7 @@
                             title: '添加管理员', //标题
                             executeUrl: ':dasc/realmManagers/add', //提交地址
                             executeMethod: 'post',
-                            executeParam: [{
+                            executeParams: [{
                                 cacheData: true,
                                 key: 'realmGuid',
                                 value: 'guid'
@@ -222,7 +223,7 @@
                                     key: 'realmGuid',
                                     value: 'guid'
                                 },
-                                target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8', //指向父组件的guid
+                                target: '77bed472-cd7e-4597-9c1d-9fb67cf2f545', //指向父组件的guid
                                 autoSearch: true,
                                 checkbox: true,
                                 col: 24,
@@ -296,6 +297,8 @@
                                     key: 'orgType',
                                     value: 1
                                 }],
+                                executeUrl:':dasc/orgs/modify',
+                                executeMethod:'post',
                                 prepareMethod: 'get',
                                 properties: [{
                                         type: 'input',
@@ -317,6 +320,18 @@
                                         name: 'orgCode',
                                         required: true,
                                         validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '状态',
+                                        name: 'state',
+                                       hide:true,
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: 'guid',
+                                        name: 'guid',
+                                       hide:true,
                                     },
                                     {
                                         type: "select",
@@ -376,8 +391,11 @@
                                         required: true,
                                         validateErrorMessage: "必填项不能为空"
                                     },
-                                ]
-
+                                ],
+                                confirm: {
+                                tip: '确认修改？',
+                                success: '修改成功'
+                            },
                             },
                             body: ['guid']
                         },
@@ -385,6 +403,7 @@
                             name: "撤销",
                             url: ':dasc/orgs/delete',
                             function: "delete",
+                            method:'post',
                             body: ['guid'],
                             confirm: {
                                 tip: "确认撤销该机构？",
@@ -485,6 +504,7 @@
                                             label: "name",
                                             value: "type"
                                         },
+                                        defaultValue:'',
                                         required: true,
                                         validateErrorMessage: "必填项不能为空"
                                     },
@@ -512,10 +532,16 @@
                             }
                         },
                         {
-                            type: "button",
-                            function: "search",
-                            name: "刷新"
-                        }
+                        name: '刷新',
+                        type: "button",
+                        function: 'search',
+                        params: {
+                            cacheData: true,
+                            key: 'realmGuid',
+                            value: 'guid' //row数据中的字段
+                        },
+                        method: 'get'
+                    }
                     ]
                 },
                 dialogSetting1: { //第一层弹框类实例

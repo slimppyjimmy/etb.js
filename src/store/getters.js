@@ -15,7 +15,7 @@ const getters = {
   version: state => state.user.version,
   pagePermission:state=>state.user.pagePermission,
   warning:state=>state.user.warning,
-  cacheData:state=>state.user.cacheData
-  
+  cacheData:state=>state.user.cacheData,
+  publicParams:state=>state.user.publicParams
 }
 export default getters

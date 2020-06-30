@@ -74,6 +74,22 @@
                 treeObj.expandAll(this.treeSetting.expandAll)
             },
             handleNodeClick: function (evnet, treeId, treeNode) {
+                
+                if (this.treeSetting.hasOwnProperty('event')) {
+                    const gridEvent = this.treeSetting.event
+                    if (gridEvent.rowClick) {
+                        let data = new Object;
+                        data.function = gridEvent.rowClick.function;
+                        data.row = treeNode
+                        gridEvent.rowClick.target.forEach((item) => {
+                            let param = new Object;
+                            this.$store.getters.cacheData[item] = data.row 
+                            console.log(199191919)
+                            console.log(this.$store.getters.cacheData)//存储行数据，关键数据避免重复传递
+                            this.$bus.emit(item, data)
+                        })
+                    }
+                }
                 const item = document.getElementById(`${treeNode.tId}_span`)
                 this.clickNode = treeNode
             },
@@ -86,7 +102,7 @@
                             btn.id = `${treeid}_${treeNode.id}_btn`;
                             btn.classList.add('tree_extra_btn');
                             btn.innerText = btnItem.name;
-                            btn.setAttribute("style", "color:#409eff;cursor: pointer;margin-left: 4px;")
+                            btn.setAttribute("style", "color:#409eff;cursor:pointer;margin-left: 4px;")
                             btn.addEventListener('click', (e) => {
                                 e.stopPropagation()
                                 this.treeNodeButtonClick(treeNode, btnItem)
@@ -142,8 +158,14 @@
                         data.push(node[key])
                     }
                 }
+                let url=''
+                if (config.loadUrl){
+                    url=config.loadUrl
+                }else if(config.url){
+                    url =config.url
+                }
                new httpService({
-                   url:config.loadUrl,
+                   url:url,
                    method:config.method,
                    params:params,
                    data:data
@@ -155,7 +177,10 @@
                        data.function='toLoadData'
                        data.cacheData=this.$store.getters.cacheData[this.treeSetting.guid]
                        this.$bus.emit(config.dialogSetting.target,data)
+                   }else{
+                       this.toSearch(this.searchData)
                    }
+
                })
      
             },
@@ -206,6 +231,14 @@
             },
             toSearch: function (params) {
                 //设置分页值
+                if(params.function){
+                    delete params.function
+                }
+                if(this.treeSetting.defaultParams){
+                    this.treeSetting.defaultParams.forEach((item) => {
+                        params[item.key] = item.value
+                    })
+                }
                 new httpService({
                     url: this.treeSetting.url,
                     params: params,

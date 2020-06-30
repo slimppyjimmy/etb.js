@@ -26,7 +26,8 @@ const state = {
   guid: '',
   version: '',
   pagePermission: '',
-  cacheData: {}
+  cacheData: {},
+  publicParams:{}
 }
 
 const mutations = {
@@ -63,6 +64,9 @@ const mutations = {
   },
   SET_CACHEDATA: (state, cacheData) => {
     state.cacheData = cacheData
+  },
+  SET_PUBLICPARAMS:(state,publicParams,)=>{
+    state.publicParams = publicParams
   }
 
 }

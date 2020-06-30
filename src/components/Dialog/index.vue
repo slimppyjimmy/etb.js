@@ -120,18 +120,30 @@
                 if (this.setting.config.dialogSetting.hasOwnProperty('executeParams')) { //组成需要附加在表单提交接口上的数
                     let executeParams = this.setting.config.dialogSetting.executeParams
                     executeParams.forEach((item) => {
-                        if (this.cacheData !== null) {
-                            params[item.key] = this.cacheData[item.value]
-                        }
+                        
+                        if (item.catchData) {
+                            let cacheData=new Object;
+                            cacheData=this.$store.getters.cacheData
+                            console.log(cacheData)
+                            params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
+                        }else if (item.publicParam) {
+                                params[item.key] = this.$store.getters.publicParams[item.key]
+                            } 
                     })
-                    // let key = this.setting.config.dialogSetting.executeParam.key
-                    // let value = this.setting.config.dialogSetting.executeParam.value
-
-                    // this.setting.config.dialogSetting.forEach((item) => {
-                    //     params[item.key] = this.setting.data[item.value]
-                    // })
                 }
                 let postData = []
+                if (this.isString) {
+                    for (let i in this.form) {
+                        if (Array.isArray(this.form[i])) {
+
+                            if (this.form[i][0] == undefined) {
+                                this.form[i] = ''
+                            } else {
+                                this.form[i] = this.form[i][0]
+                            }
+                        }
+                    }
+                }
                 postData = JSON.parse(JSON.stringify(this.form))
 
                 if (postData.hasOwnProperty(this.inputAndButtonData.name)) {
@@ -139,8 +151,10 @@
                         .inputAndButtonData
                         .bind]
                 }
+
                 if (this.multipleSelection.length > 0) {
                     postData = []
+
                     this.multipleSelection.forEach((item) => {
                         this.setting.config.dialogSetting.body.forEach((a) => {
                             postData.push(item[a])
@@ -148,24 +162,7 @@
 
                     })
                 }
-                if (this.isString) {
-                    console.log(postData)
-                    for (let i in postData) {
-                        if (Array.isArray(postData[i])) {
-                            if (postData[0] == undefined) {
-                                postData[i] = ''
-                            } else {
-                                postData[i] = postData[0]
-                            }
 
-                        }
-                    }
-                    // postData.forEach((item)=>{
-                    //     if( Array.isArray(item)){
-                    //         item=item[0]
-                    //     }
-                    // })
-                }
                 this.$confirm(this.setting.config.dialogSetting.confirm.tip, '提示', {
                     cancelButtonClass: "btn-custom-cancel",
                     cancelButtonText: '取消',
@@ -178,12 +175,19 @@
                         params: params,
                         data: encriptPwd(postData)
                     }).then((res) => {
+                    
                         this.dialogVisible = false
-                        this.$bus.emit(this.setting.config.guid, 'Refresh')
+                        if (this.setting.config.guid) {
+                            this.$bus.emit(this.setting.config.guid, 'Refresh')
+                        }else if(this.setting.config.dialogSetting.refresh){
+                            this.$bus.emit(this.setting.config.dialogSetting.refresh,'toSearch')
+                        }
+
                         this.$message({
                             message: this.setting.config.dialogSetting.confirm.success,
                             type: 'success'
                         });
+
                     }).catch((err) => {
                         console.log(err)
                     })
@@ -205,6 +209,7 @@
                 }
                 //必须放在这个位置，否则cacheData会被覆盖
                 if (params.cacheData) {
+
                     this.cacheData = params.cacheData
                     this.listSetting.cacheData = params.cacheData
                     this.searchbarSetting.cacheData = params.cacheData
@@ -222,12 +227,13 @@
                         let prepareParams = params.config.dialogSetting.prepareParams
 
                         prepareParams.forEach((item) => {
-                           
-                            if (item.cacheData) {
-                                 
+
+                            if (item.cacheData) { //todo采用publicParam机制后可以删除
                                 requestParam[item.key] = this.cacheData[item.value]
-                            }else{
-                                requestParam[item.key] =this.loadData[item.value]
+                            } else if (item.publicParam) {
+                                requestParam[item.key] = this.$store.getters.publicParams[item.key]
+                            } else {
+                                requestParam[item.key] = this.loadData[item.value]
                             }
                         })
                     }
@@ -250,14 +256,23 @@
                             params.config.dialogSetting.properties.forEach((item) => {
                                 if (item.type == 'cascader') { //当存在级联选择时，对prepareData中的对应数据做递归处理
                                     let dataMap = JSON.parse(JSON.stringify(item.dataMap))
-                                    this.cascaderOptions = this.buildTree(this.prepareData[item
-                                        .data], dataMap)
-                                    if (this.cascaderOptions.length == 0) {
-                                        this.cascaderOptions = [{
+                                    let rootDom={
                                             label: '根节点',
                                             value: ''
-                                        }]
-                                    }
+                                        }
+                                    let mainDom=this.buildTree(this.prepareData[item
+                                        .data], dataMap)
+                                        mainDom.push(rootDom)
+                                        console.log(mainDom)
+                                    this.cascaderOptions = mainDom
+        
+                                    //     console.log(this.cascaderOptions)
+                                    // if (Object.keys(this.cascaderOptions) == 0) {
+                                    //     this.cascaderOptions = [{
+                                    //         label: '根节点',
+                                    //         value: ''
+                                    //     }]
+                                    // }
                                 }
                                 if (item.isString) {
                                     this.isString = true
@@ -266,7 +281,13 @@
                                 this.$set(this.form, item.name, item.defaultValue ? item
                                     .defaultValue :
                                     this.prepareData[item.name])
+                                if (Object.keys(this.loadData).length !== 0) {
+                                    this.$set(this.form, item.name, item.defaultValue ? item
+                                        .defaultValue :
+                                        this.loadData[item.name])
+                                }
                             })
+                            this.loadData = {}
                         }
                         this.dialogVisible = true
 
@@ -310,11 +331,12 @@
                 }
             },
             toSaveMultipleSelection: function (params) {
+
                 this.multipleSelection = params.data
             },
             toLoadData: function (params) {
-                this.loadData=params.loadData
-                this.catchData=params.catchData
+                this.loadData = params.loadData
+                this.catchData = params.catchData
                 this.initDialog(params)
 
             },

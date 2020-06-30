@@ -9,7 +9,7 @@
         <span v-if="searchBar.properties && searchBar.properties.length>0 ? true:false "
             v-for="(item,index) in searchBar.properties" :key="item.id">
             <div class="searchBar-select" v-if="item.type==='select'">
-                <el-select v-model="params[item.paramName]" placeholder="请选择" size="mini" @change="change()"
+                <el-select v-model="params[item.paramName]" placeholder="请选择" size="mini" @change="change(item)"
                     :style="`width:${item.width}px`">
                     <el-option v-for="param in optionGroup['option'+(item.id-1)]" :key="param[item.dataMap.value]"
                         :label="param[item.dataMap.label]" :value="param[item.dataMap.value]">
@@ -48,13 +48,20 @@
             return {
                 optionGroup: {}, //下拉框数据装载对象
                 params: { //searchbar参数数据装载对象
-                }
+                },
+                publicParam: {}
             }
         },
         methods: {
             //事件函数
-            change: function () { //下拉框切换数据时触发
+            change: function (selectConfig) { //下拉框切换数据时触发
+            if(this.publicParam.hasOwnProperty(selectConfig.paramName)){
+            //    console.log(selectConfig.paramName)
+            //    console.log(this.params[selectConfig.paramName])
+               this.$store.getters.publicParams[selectConfig.paramName]=this.params[selectConfig.paramName]
+           }
                 this.toSearch()
+                
             },
             handleSearchBarBtnClick: function (btnConfig) {
                 switch (btnConfig.function) {
@@ -74,13 +81,13 @@
             },
             toSearch: function (btnConfig) {
                 let params = new Object;
-              
+
                 if (btnConfig && btnConfig.params) {
                     //更具传入的parmas从vuex中获取值
-                    let value=this.$store.getters.cacheData[this.searchBar.target]
-                    params[btnConfig.params.key]=value[btnConfig.params.value]
+                    let value = this.$store.getters.cacheData[this.searchBar.target]
+                    params[btnConfig.params.key] = value[btnConfig.params.value]
                 } else {
-                     params = this.params
+                    params = this.params
                 }
                 params.function = 'toSearch'
                 this.$bus.emit(this.searchBar.target, params)
@@ -104,7 +111,7 @@
                 data.config = btnConfig
                 data.config.guid = this.searchBar.guid
                 data.data = this.params
-                data.cacheData=this.$store.getters.cacheData[this.searchBar.target]
+                data.cacheData = this.$store.getters.cacheData[this.searchBar.target]
                 this.$bus.emit(btnConfig.dialogSetting.target, data)
             },
             //初始化部分函数
@@ -137,11 +144,23 @@
                         this.$set(this.params, selectConfig.paramName, data[0][Object.keys(data[
                             0])[
                             0]])
+                        if (selectConfig.publicParam) {
+                            this.$set(this.publicParam, selectConfig.paramName, data[0][Object.keys(
+                                data[
+                                    0])[
+                                0]])
+                            this.setPublicParams(selectConfig.paramName, data[0][Object.keys(data[
+                                0])[
+                                0]])
+                        }
                     })
                     if (index == 0) { //
                         this.toSearch()
                     }
                 })
+            },
+            setPublicParams: function (key, value) {
+                this.$store.getters.publicParams[key] = value
             },
             /*
              *@params:inputConfig输入框配置对象，index数量
