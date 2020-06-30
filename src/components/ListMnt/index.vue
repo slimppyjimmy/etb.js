@@ -10,12 +10,15 @@
             </div>
             <div>
                 <el-table :data="tableData" style="width: 100%" border :cell-style="cellStyle" :row-style="rowStyle"
-                    @row-click="rowClick" @current-change="rowCheck">
+                    @row-click="rowClick" @current-change="rowCheck" @selection-change="handleSelectionChange">>
                     <el-table-column label="单选" width="50"
                         v-if="listSetting.checkbox && listSetting.checkbox.type=='single'">
                         <template slot-scope="scope">
                             <el-radio v-model="tableRadio" :label="scope.row"><i></i></el-radio>
                         </template>
+                    </el-table-column>
+                    <el-table-column type="selection" width="55"
+                        v-if="listSetting.checkbox?listSetting.checkbox:false ">
                     </el-table-column>
                     <el-table-column v-if="listSetting.showIndex" type="index" width="50" label="序号">
                     </el-table-column>
@@ -72,7 +75,8 @@
                 searchData: {},
                 selectData: [],
                 tableRadio: '',
-                singleCheckData: {},
+                singleCheckData: {}, //单选中的数据
+                multipleSelection: [] // 复选中的数据
             }
         },
         methods: {
@@ -98,6 +102,16 @@
                 } else {
                     console.error("按钮属性配置错误，请检查")
                 }
+            },
+            handleSelectionChange: function (val) {
+                this.multipleSelection = val
+                let params=new Object;
+                params.data=this.multipleSelection
+                params.function='toSaveMultipleSelection'
+                if(this.listSetting.target){
+                    this.$bus.emit(this.listSetting.target,params)
+                }
+
             },
             toRemove: function (config, row) {
                 this.$confirm(config.confirm.tip, '提示', {
@@ -138,10 +152,16 @@
                     let params = {}
                     //判断是否携带params，打包数据
                     if (config.params) {
-                        for (let i in config.params) {
-                            let item = config.params[i]
-                            params[item.key] = row[item.value]
+                        if (this.$store.getters.cacheData !== null) {
+                            params[config.params.key] = this.$store.getters.cacheData[this.listSetting.guid]
+                                [config.params.value]
+                        } else {
+                            for (let i in config.params) {
+                                let item = config.params[i]
+                                params[item.key] = row[item.value]
+                            }
                         }
+
                     }
                     let data = []
                     //判断是否携带body，打包数据
@@ -170,14 +190,22 @@
                 this.toSearch(this.searchData, true)
             },
             toSearch: function (params, boolean) {
-                //设置分页值
 
+                //设置分页值
+                if (params.function) {
+                    delete params.function //删除用于定位函数的function字段
+                }
                 if (boolean && params) {
                     params.pageIndex = this.pageIndex
                 } else {
                     params.pageIndex = 1
                 }
+                // console.log(this.listSetting)
                 params.pageSize = this.pageSize
+                if (this.listSetting.params && this.listSetting.cacheData) {
+                    params[this.listSetting.params.key] = this.listSetting.cacheData[this.listSetting.params.value]
+                }
+                this.searchData = params //seabar数据打包
                 new httpService({
                     url: this.listSetting.url,
                     params: params,
@@ -201,7 +229,7 @@
                         }
                     }
                     this.tableData = data
-                    this.searchData = params //seabar数据打包
+
                 })
             },
             //请求函数，公共方法
@@ -249,6 +277,8 @@
                         data.function = gridEvent.rowClick.function;
                         data.row = row
                         gridEvent.rowClick.target.forEach((item) => {
+                            let param = new Object;
+                            this.$store.getters.cacheData[item] = data.row //存储行数据，关键数据避免重复传递
                             this.$bus.emit(item, data)
                         })
                     }
@@ -276,6 +306,7 @@
             },
             toShow: function (data) {
                 this.toRefresh(data)
+
                 this.listSetting.hide = false
             },
             toRefresh(data) {
@@ -311,6 +342,7 @@
             },
             toReceive: function (data) {
                 if (data && data.function) {
+
                     eval(`this.${data.function}(data)`)
                 } else {
                     this.toRefresh(data)
@@ -329,11 +361,13 @@
                         console.error('配置项中缺少' + item)
                     }
                 })
+
                 if (
                     this.listSetting.grid.columns
                 ) {
                     this.addId(this.listSetting.grid.columns);
                 }
+
                 if (
                     this.listSetting.grid.buttons
                 ) {

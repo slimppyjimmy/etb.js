@@ -142,12 +142,26 @@
                         data.push(node[key])
                     }
                 }
-                this.sendRequest(config.url, config.method, params, data)
+               new httpService({
+                   url:config.loadUrl,
+                   method:config.method,
+                   params:params,
+                   data:data
+               }).then((res)=>{
+                   if(config.dialogSetting){
+                       let data=new Object;
+                       data.config=config
+                       data.loadData=res.data
+                       data.function='toLoadData'
+                       data.cacheData=this.$store.getters.cacheData[this.treeSetting.guid]
+                       this.$bus.emit(config.dialogSetting.target,data)
+                   }
+               })
+     
             },
             toDelete: function (config, node) {
                 if (node == undefined) {
                     node = this.clickNode
-                    console.log(node)
                 }
                 this.$confirm(config.confirm.tip, '提示', {
                     cancelButtonClass: "btn-custom-cancel",

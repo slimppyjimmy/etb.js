@@ -61,7 +61,6 @@
             {
               type: "button",
               function: "search",
-              url: "/u/info",
               name: "搜索",
             },
             {
@@ -240,8 +239,6 @@
                     validateErrorMessage: "必填项不能为空"
                   },
                 ]
-
-
               }
             }
           ]

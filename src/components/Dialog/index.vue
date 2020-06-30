@@ -1,8 +1,10 @@
 <template>
-    <el-dialog :title="title" :visible.sync="dialogVisible" width="40%" center :modal="true" top="50px">
+    <el-dialog :title="title" v-if="dialogVisible" :visible.sync="dialogVisible" width="40%" center :modal="true"
+        top="50px">
         <el-form ref="form" :model="form" label-width="120px" size="mini" status-icon>
             <span v-for="(item,index) in formSetting" :key=index>
-                <el-form-item v-if="item.type=='input'" :label="item.label" :prop="item.name"  v-show="item.hide?!item.hide:true"
+                <el-form-item v-if="item.type=='input'" :label="item.label" :prop="item.name"
+                    v-show="item.hide?!item.hide:true"
                     :rules="{required:item.required? item.required:false,message:item.validateErrorMessage, trigger: 'blur'}">
                     <el-input v-model="form[item.name]" :style="item.width? `width:${item.width};`:`width:500px;`"
                         :disabled='item.disabled? item.disabled:false'>
@@ -57,6 +59,8 @@
             </span>
         </el-form>
         <slot name='list'>
+            <searchBar v-if="this.showSearchbar" :searchBar='this.searchbarSetting'></searchBar>
+            <list-mnt v-if="this.showList" :listSetting='this.listSetting'></list-mnt>
         </slot>
         <!-- <list-mnt
             v-if='setting.config && setting.config.dialogSetting && setting.config.dialogSetting.listSetting? true:false'
@@ -93,7 +97,16 @@
                 title: '',
                 listData: '', //弹框嵌套list时装载数据对象
                 inputAndButtonData: {}, //特殊组件值
-                cascaderOptions: [], //级联选择器装载数据对象
+                cascaderOptions: '', //级联选择器装载数据对象
+                showList: false,
+                showSearchbar: false,
+                listSetting: {}, //
+                searchbarSetting: {},
+                checkData: {},
+                multipleSelection: [], //复选框数据
+                cacheData: {},
+                isString: false,
+                loadData: {} //加载数据
             }
         },
         methods: {
@@ -103,18 +116,56 @@
                     return
                 }
                 let params = new Object
-             
-                if (this.setting.config.dialogSetting.hasOwnProperty('executeParam')) { //组成需要附加在表单提交接口上的数据
+
+                if (this.setting.config.dialogSetting.hasOwnProperty('executeParams')) { //组成需要附加在表单提交接口上的数
+                    let executeParams = this.setting.config.dialogSetting.executeParams
+                    executeParams.forEach((item) => {
+                        if (this.cacheData !== null) {
+                            params[item.key] = this.cacheData[item.value]
+                        }
+                    })
+                    // let key = this.setting.config.dialogSetting.executeParam.key
+                    // let value = this.setting.config.dialogSetting.executeParam.value
+
                     // this.setting.config.dialogSetting.forEach((item) => {
                     //     params[item.key] = this.setting.data[item.value]
                     // })
                 }
-                let postData = JSON.parse(JSON.stringify(this.form))
+                let postData = []
+                postData = JSON.parse(JSON.stringify(this.form))
+
                 if (postData.hasOwnProperty(this.inputAndButtonData.name)) {
-                    postData[this.inputAndButtonData.name] = this.inputAndButtonData.data[this.inputAndButtonData
+                    postData[this.inputAndButtonData.name] = this.inputAndButtonData.data[this
+                        .inputAndButtonData
                         .bind]
                 }
+                if (this.multipleSelection.length > 0) {
+                    postData = []
+                    this.multipleSelection.forEach((item) => {
+                        this.setting.config.dialogSetting.body.forEach((a) => {
+                            postData.push(item[a])
+                        })
 
+                    })
+                }
+                if (this.isString) {
+                    console.log(postData)
+                    for (let i in postData) {
+                        if (Array.isArray(postData[i])) {
+                            if (postData[0] == undefined) {
+                                postData[i] = ''
+                            } else {
+                                postData[i] = postData[0]
+                            }
+
+                        }
+                    }
+                    // postData.forEach((item)=>{
+                    //     if( Array.isArray(item)){
+                    //         item=item[0]
+                    //     }
+                    // })
+                }
                 this.$confirm(this.setting.config.dialogSetting.confirm.tip, '提示', {
                     cancelButtonClass: "btn-custom-cancel",
                     cancelButtonText: '取消',
@@ -141,12 +192,53 @@
             },
             initDialog: function (params) { //接受到点击时间后初始化弹框
                 this.setting = params
+
+                //判读是否存在list组件
+                if (params.config && params.config.dialogSetting.showList) {
+                    this.listSetting = params.config.dialogSetting.listSetting
+                    this.showList = true
+                }
+                //判断是否存在searchbar组件
+                if (params.config && params.config.dialogSetting.showSearchbar) {
+                    this.searchbarSetting = params.config.dialogSetting.searchBar
+                    this.showSearchbar = true
+                }
+                //必须放在这个位置，否则cacheData会被覆盖
+                if (params.cacheData) {
+                    this.cacheData = params.cacheData
+                    this.listSetting.cacheData = params.cacheData
+                    this.searchbarSetting.cacheData = params.cacheData
+                }
                 if (params.config && params.config.dialogSetting) {
                     this.title = params.config.dialogSetting.title
                 }
                 if (params.config.dialogSetting.hasOwnProperty('prepareUrl')) { //判断有无prepareUrl有的话则请求数据并装载
                     let requestParam = new Object;
-                    requestParam[params.config.dialogSetting.prepareParam] = params.data.guid
+                    // requestParam[params.config.dialogSetting.prepareParam] = params.data.guid
+                    //准备参数
+                    if (params.config.dialogSetting.prepareParams) {
+
+                        requestParam = {}
+                        let prepareParams = params.config.dialogSetting.prepareParams
+
+                        prepareParams.forEach((item) => {
+                           
+                            if (item.cacheData) {
+                                 
+                                requestParam[item.key] = this.cacheData[item.value]
+                            }else{
+                                requestParam[item.key] =this.loadData[item.value]
+                            }
+                        })
+                    }
+                    //准备参数默认值
+                    if (params.config.dialogSetting.defaultPrepareParams) {
+                        let defaultPrepareParams = params.config.dialogSetting.defaultPrepareParams
+                        defaultPrepareParams.forEach((item) => {
+                            requestParam[item.key] = item.value
+                        })
+                    }
+
                     new httpService({
                         url: params.config.dialogSetting.prepareUrl,
                         params: requestParam,
@@ -155,12 +247,20 @@
                         this.prepareData = res.data
                         if (params.config.dialogSetting.hasOwnProperty('properties')) {
                             this.formSetting = params.config.dialogSetting.properties
-
                             params.config.dialogSetting.properties.forEach((item) => {
                                 if (item.type == 'cascader') { //当存在级联选择时，对prepareData中的对应数据做递归处理
                                     let dataMap = JSON.parse(JSON.stringify(item.dataMap))
                                     this.cascaderOptions = this.buildTree(this.prepareData[item
                                         .data], dataMap)
+                                    if (this.cascaderOptions.length == 0) {
+                                        this.cascaderOptions = [{
+                                            label: '根节点',
+                                            value: ''
+                                        }]
+                                    }
+                                }
+                                if (item.isString) {
+                                    this.isString = true
                                 }
                                 //数据预处理
                                 this.$set(this.form, item.name, item.defaultValue ? item
@@ -185,6 +285,7 @@
 
             },
             innerDialog: function (params) {
+
                 let data = new Object
                 data.config = params.buttonConfig //传入inputandbutton按钮的配置参数
                 data.config.parentGuid = this.setting.config.dialogSetting.guid //传入当前弹框的guid作为下一层弹框的父guid，用于消息传递
@@ -194,6 +295,10 @@
                 // this.$bus.on(this.dialogSetting.guid + data.propertiesName, this.toUpdateData)
             },
             toUpdateData: function (params) {
+                if (this.formSetting = null) {
+                    this.checkData = params
+                    return
+                }
                 this.inputAndButtonData = params
                 //todo 临时对字段进行定位的方法
                 let config = this.setting.config.dialogSetting.properties.filter((res) => {
@@ -203,6 +308,15 @@
                 if (this.form.hasOwnProperty(config[0].name)) {
                     this.form[config[0].name] = params.loginName
                 }
+            },
+            toSaveMultipleSelection: function (params) {
+                this.multipleSelection = params.data
+            },
+            toLoadData: function (params) {
+                this.loadData=params.loadData
+                this.catchData=params.catchData
+                this.initDialog(params)
+
             },
             reciveListData: function (params) { //接受嵌套list组件传入的数据
                 this.listData = params
@@ -242,6 +356,7 @@
                 }
             },
             toReceive: function (data) {
+
                 if (data && data.function) {
                     eval(`this.${data.function}(data)`)
                 } else {
@@ -250,6 +365,8 @@
             },
         },
         created() {
+            this.showList - false
+            this.showSearchbar = false
             this.$bus.on(this.dialogSetting.guid, this.toReceive)
         },
         beforeDestroy() { //销毁监听事件

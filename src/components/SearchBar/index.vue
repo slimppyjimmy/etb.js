@@ -67,14 +67,24 @@
                     case ('created'):
                         this.toCreated(btnConfig)
                         break;
+                    case ('check'):
+                        this.toCheck(btnConfig)
+                        break;
                 }
             },
-            toSearch: function () {
-                
-                    let params = this.params
-                    params.function = 'toSearch'
-                    this.$bus.emit(this.searchBar.target, params)
-                
+            toSearch: function (btnConfig) {
+                let params = new Object;
+              
+                if (btnConfig && btnConfig.params) {
+                    //更具传入的parmas从vuex中获取值
+                    let value=this.$store.getters.cacheData[this.searchBar.target]
+                    params[btnConfig.params.key]=value[btnConfig.params.value]
+                } else {
+                     params = this.params
+                }
+                params.function = 'toSearch'
+                this.$bus.emit(this.searchBar.target, params)
+
 
             },
             toDelete: function (btnConfig) {
@@ -87,6 +97,14 @@
                 data.config = btnConfig
                 data.config.guid = this.searchBar.guid
                 data.data = this.params
+                this.$bus.emit(btnConfig.dialogSetting.target, data)
+            },
+            toCheck: function (btnConfig) {
+                let data = new Object
+                data.config = btnConfig
+                data.config.guid = this.searchBar.guid
+                data.data = this.params
+                data.cacheData=this.$store.getters.cacheData[this.searchBar.target]
                 this.$bus.emit(btnConfig.dialogSetting.target, data)
             },
             //初始化部分函数
@@ -155,7 +173,7 @@
                             this.initInput(properties, i)
                             break;
                         default:
-                            if(this.searchBar.autoSearch==false){
+                            if (this.searchBar.autoSearch == false) {
                                 return
                             }
                             this.toSearch()

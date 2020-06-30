@@ -12,8 +12,8 @@
             </tree-mnt>
         </el-col>
         <dia-log :dialogSetting='dialogSetting1'></dia-log>
+        <dia-log :dialogSetting='dialogSetting2'></dia-log>
     </el-main>
-
 </template>
 
 <script>
@@ -42,13 +42,13 @@
                                 title: '修改域',
                                 prepareUrl: ':dasc/realms/get',
                                 executeUrl: ':dasc/realms/modify',
-                                prepareParam:'guid',
-                                prepareMethod:'get',
-                                executeMethod:'post',
+                                prepareParam: 'guid',
+                                prepareMethod: 'get',
+                                executeMethod: 'post',
                                 confirm: {
-                                tip: "确认修改？",
-                                success: "修改成功"
-                            },
+                                    tip: "确认修改？",
+                                    success: "修改成功"
+                                },
                                 properties: [{
                                         type: 'input',
                                         label: '标志',
@@ -79,7 +79,15 @@
                                 ]
                             }
                         }, {
-                            name: '删除'
+                            name: '删除',
+                            function: 'delete', //删除
+                            confirm: {
+                                tip: "确认删除？",
+                                success: "删除成功"
+                            },
+                            url: ':dasc/realms/delete',
+                            body: ['guid'],
+                            method: 'post',
                         }],
                         event: {
                             rowClick: {
@@ -101,11 +109,12 @@
                         type: "button",
                         function: "created",
                         dialogSetting: {
-                            target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8',
-                            title: '新建域',
-                            prepareUrl: ':dasc/realms/prepare',
-                            executeUrl: ':dasc/realms/add',
-                            method: 'post',
+                            target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8', //指向哪个dialog
+                            title: '新建域', //标题
+                            prepareUrl: ':dasc/realms/prepare', //准备数据url
+                            executeUrl: ':dasc/realms/add', //确认数据url
+                            prepareMethod: 'get', //准备数据请求方式
+                            executeMethod: 'post',
                             confirm: {
                                 tip: "确认增加？",
                                 success: "新增成功"
@@ -137,8 +146,8 @@
                     guid: 'a05f0c73-4e43-455f-9d87-9db78cdac8a6',
                     col: 24,
                     hide: true,
-                    paramName: "realmGuid",
                     url: ':dasc/realmManagers/listUsers',
+                    paramName: "realmGuid",
                     grid: {
                         columns: [{
                             label: '姓名',
@@ -148,7 +157,19 @@
                             data: 'loginName'
                         }],
                         buttons: [{
-                            name: '移出'
+                            name: '移出',
+                            function: 'delete',
+                            url: ':dasc/realmManagers/delete',
+                            confirm: {
+                                tip: '确认移出？',
+                                success: '移出成功'
+                            },
+                            body: ['guid'],
+                            params: {
+                                key: 'realmGuid',
+                                value: 'guid'
+                            },
+                            method: 'post'
                         }]
                     }
 
@@ -161,12 +182,81 @@
                     properties: [{
                         name: "添加管理员",
                         type: "button",
-                        url: ':dasc/realms/prepare',
-                        function: "created",
+                        // url: 'dasc/realmManagers/prepareUsers',
+                        function: "check",
+                        dialogSetting: {
+                            target: '77bed472-cd7e-4597-9c1d-9fb67cf2f545', //指向哪个dialog
+                            title: '添加管理员', //标题
+                            executeUrl: ':dasc/realmManagers/add', //提交地址
+                            executeMethod: 'post',
+                            executeParam: [{
+                                cacheData: true,
+                                key: 'realmGuid',
+                                value: 'guid'
+                            }],
+                            body: ['guid'],
+                            showList: true,
+                            showSearchbar: true,
+                            searchBar: {
+                                name: "选择用户",
+                                guid: 'bd47ef91-2fe4-48bc-a8d5-ed09a3295be2',
+                                target: '05020464-5722-4ba5-8ced-f30c39fea3a2',
+                                autoSearch: true,
+                                properties: [{
+                                        type: "input",
+                                        paramName: "searchContent",
+                                        placeholder: "请输入姓名，部门名称或登录名.....",
+                                        width: 300
+                                    },
+                                    {
+                                        type: "button",
+                                        function: "search",
+                                        name: "搜索",
+                                    }
+                                ]
+                            },
+                            listSetting: {
+                                guid: '05020464-5722-4ba5-8ced-f30c39fea3a2',
+                                url: ":dasc/realmManagers/prepareUsers",
+                                params: {
+                                    key: 'realmGuid',
+                                    value: 'guid'
+                                },
+                                target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8', //指向父组件的guid
+                                autoSearch: true,
+                                checkbox: true,
+                                col: 24,
+                                grid: {
+                                    columns: [{
+                                            lable: '名称',
+                                            data: 'userName',
+                                        },
+                                        {
+                                            lable: '登录名',
+                                            data: 'loginName',
+                                        }
+                                    ]
+                                },
+                                pagination: {
+                                    size: 10
+                                }
+                            },
+                            confirm: {
+                                tip: "确认增加？",
+                                success: "新增成功"
+                            },
+
+                        }
                     }, {
                         name: '刷新',
                         type: "button",
-                        function: 'search'
+                        function: 'search',
+                        params: {
+                            cacheData: true,
+                            key: 'realmGuid',
+                            value: 'guid' //row数据中的字段
+                        },
+                        method: 'get'
                     }]
                 },
                 treeSetting: {
@@ -184,20 +274,117 @@
                     showIcon: true, //tree节点携带的数据，可选项，不项则默认携带所有后台返回数据
                     treeNodeButton: [{
                             name: "修改",
-                            url: ":dasc/orgs/changeSortDown",
                             function: "modify",
-                            method: 'post',
+                            loadUrl: ':dasc/orgs/get',
+                            method: 'get',
                             params: [{
-                                key: "orgGuid",
+                                key: "guid",
                                 value: "guid"
                             }],
+                            dialogSetting: {
+                                target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8',
+                                prepareUrl: ':dasc/realmOrgs/prepareOrg',
+                                prepareParams: [{
+                                    key: 'orgGuid',
+                                    value: 'guid'
+                                }, {
+                                    cacheData: true,
+                                    key: 'realmGuid',
+                                    value: 'guid'
+                                }],
+                                defaultPrepareParams: [{
+                                    key: 'orgType',
+                                    value: 1
+                                }],
+                                prepareMethod: 'get',
+                                properties: [{
+                                        type: 'input',
+                                        label: '全称',
+                                        name: 'fullName',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '简称',
+                                        name: 'shortName',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '机构代码',
+                                        name: 'orgCode',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '类型',
+                                        name: 'belongTyoe', //存储数据的字段名
+                                        defaultValue: 1,
+                                        data: 'belongTypes', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '所属类型',
+                                        name: 'orgType', //存储数据的字段名
+                                        data: 'orgTypes', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        defaultValue: 1,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '二级类型',
+                                        name: 'orgType2', //存储数据的字段名
+                                        data: 'orgTypes2', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "cascader",
+                                        label: '上级机构',
+                                        name: 'parentGuid', //存储数据的字段名
+                                        data: 'orgs', //准备数据对应字段名
+                                        isString: true,
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "fullName",
+                                            value: "guid"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '排序',
+                                        name: 'sortNo',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                ]
+
+                            },
                             body: ['guid']
                         },
                         {
                             name: "撤销",
                             url: ':dasc/orgs/delete',
                             function: "delete",
-                            method: 'post',
                             body: ['guid'],
                             confirm: {
                                 tip: "确认撤销该机构？",
@@ -212,8 +399,117 @@
                     guid: '1f9e7a03-3e83-49fe-85db-cd8c2e39b1f5',
                     target: '61751c7e-8d42-447c-b4d5-4cfc2a8ce475',
                     properties: [{
-                            name: '新建',
+                            name: "新建机构",
                             type: "button",
+                            url: ':dasc/realmOrgs/addOrgOfRealm',
+                            function: "check",
+                            method: 'post',
+                            dialogSetting: {
+                                target: 'baea753a-52f5-40e7-a154-4fcb4befc5b8',
+                                title: '新建机构',
+                                prepareUrl: ':dasc/realmOrgs/prepareOrg',
+                                prepareParams: [{
+                                    cacheData: true,
+                                    key: 'realmGuid',
+                                    value: 'guid'
+                                }],
+                                defaultPrepareParams: [{
+                                    key: 'orgType',
+                                    value: '1'
+                                }],
+                                executeUrl: ':dasc/realmOrgs/addOrgOfRealm',
+                                executeParams: [{
+                                    cacheData: true,
+                                    key: 'realmGuid',
+                                    value: 'guid'
+                                }],
+                                executeMethod: 'post',
+                                prepareMethod: 'get',
+                                confirm: {
+                                    tip: "确认增加？",
+                                    success: "新增成功"
+                                },
+                                properties: [{
+                                        type: 'input',
+                                        label: '全称',
+                                        name: 'fullName',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '简称',
+                                        name: 'shortName',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '机构代码',
+                                        name: 'orgCode',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '类型',
+                                        name: 'belongTyoe', //存储数据的字段名
+                                        defaultValue: 1,
+                                        data: 'belongTypes', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '所属类型',
+                                        name: 'orgType', //存储数据的字段名
+                                        data: 'orgTypes', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        defaultValue: 1,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "select",
+                                        label: '二级类型',
+                                        name: 'orgType2', //存储数据的字段名
+                                        data: 'orgTypes2', //准备数据对应字段名
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "name",
+                                            value: "type"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: "cascader",
+                                        label: '上级机构',
+                                        name: 'parentGuid', //存储数据的字段名
+                                        data: 'orgs', //准备数据对应字段名
+                                        isString: true,
+                                        dataMap: { //下拉框数据与准备数据对应关系
+                                            label: "fullName",
+                                            value: "guid"
+                                        },
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                    {
+                                        type: 'input',
+                                        label: '排序',
+                                        name: 'sortNo',
+                                        required: true,
+                                        validateErrorMessage: "必填项不能为空"
+                                    },
+                                ]
+                            }
                         },
                         {
                             type: "button",
@@ -225,6 +521,9 @@
                 dialogSetting1: { //第一层弹框类实例
                     guid: 'baea753a-52f5-40e7-a154-4fcb4befc5b8',
                 },
+                dialogSetting2: {
+                    guid: '77bed472-cd7e-4597-9c1d-9fb67cf2f545'
+                }
             }
         }
     }

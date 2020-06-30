@@ -14,6 +14,8 @@ const getters = {
   errorLogs: state => state.errorLog.logs,
   version: state => state.user.version,
   pagePermission:state=>state.user.pagePermission,
-  warning:state=>state.user.warning
+  warning:state=>state.user.warning,
+  cacheData:state=>state.user.cacheData
+  
 }
 export default getters
