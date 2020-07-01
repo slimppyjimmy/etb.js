@@ -84,8 +84,6 @@
                         gridEvent.rowClick.target.forEach((item) => {
                             let param = new Object;
                             this.$store.getters.cacheData[item] = data.row 
-                            console.log(199191919)
-                            console.log(this.$store.getters.cacheData)//存储行数据，关键数据避免重复传递
                             this.$bus.emit(item, data)
                         })
                     }
