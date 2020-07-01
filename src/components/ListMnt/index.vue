@@ -171,6 +171,9 @@
                         }
 
                     }
+                    if(config.defaultParams){
+                        params[config.defaultParams.key]=config.defaultParams.value
+                    }
                     let data = []
                     //判断是否携带body，打包数据
                     if (config.method === 'post' && config.body) {
@@ -189,15 +192,19 @@
                     data.config.guid = this.listSetting.guid
                     data.data = row
                     this.$bus.emit(config.dialogSetting.target, data)
-                } else {
+                   
+                } 
+               
                     let params = {}
                     //判断是否携带params，打包数据
                     if (config.params) {
+                        
                         config.params.forEach((item) => {
-                            if (item.catchData) {
+                            if (item.cacheData) {
+                                
+                               
                                 let cacheData = new Object;
                                 cacheData = this.$store.getters.cacheData
-                                console.log(cacheData)
                                 params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
                             } else if (item.publicParam) {
                                 params[item.key] = this.$store.getters.publicParams[item.key]
@@ -211,7 +218,7 @@
                     if (config.method === 'post' && config.body) {
                         for (let i in config.body) {
                             let key = config.body[i]
-                            data.push(node[key])
+                            data.push(row[key])
                         }
                     }
                     let url = ''
@@ -220,8 +227,9 @@
                     } else if (config.url) {
                         url = config.url
                     }
+                    
                     new httpService({
-                        url: config.url,
+                        url: url,
                         method: config.method,
                         params: params,
                         data: data
@@ -231,14 +239,14 @@
                             data.config = config
                             data.loadData = res.data
                             data.function = 'toLoadData'
-                            data.cacheData = this.$store.getters.cacheData[this.treeSetting.guid]
+                            data.cacheData = this.$store.getters.cacheData[this.listSetting.guid]
                             this.$bus.emit(config.dialogSetting.target, data)
                         } else {
                             this.toSearch(this.searchData)
                         }
 
                     })
-                }
+                
 
             },
             handleCurrentChange(val) { //切换页
@@ -250,7 +258,7 @@
                 this.toSearch(this.searchData, true)
             },
             toSearch: function (params, boolean) {
-
+                
                 //设置分页值
                 if (params.function) {
                     delete params.function //删除用于定位函数的function字段
@@ -264,6 +272,14 @@
                 params.pageSize = this.pageSize
                 if (this.listSetting.params && this.listSetting.cacheData) {
                     params[this.listSetting.params.key] = this.listSetting.cacheData[this.listSetting.params.value]
+                }
+                if (this.listSetting.defaultParams) {
+                    this.listSetting.defaultParams.forEach((item) => {
+                        params[item.key] = item.value
+                    })
+                }
+                if(this.listSetting.publicParam){
+                    params[this.listSetting.publicParam.key] = this.$store.getters.publicParams[this.listSetting.publicParam.key]
                 }
                 this.searchData = params //seabar数据打包
                 new httpService({
@@ -338,6 +354,7 @@
                         data.row = row
                         gridEvent.rowClick.target.forEach((item) => {
                             let param = new Object;
+                           
                             this.$store.getters.cacheData[item] = data.row //存储行数据，关键数据避免重复传递
                             this.$bus.emit(item, data)
                         })
@@ -376,6 +393,11 @@
                     this.listSetting.defaultParams.forEach((item) => {
                         params[item.key] = item.value
                     })
+                }
+                if(this.listSetting.publicParam){
+                    console.log(123123132)
+                    console.log(this.$store.getters.publicParams)
+                    params[this.listSetting.publicParam.key] = this.$store.getters.publicParams[this.listSetting.publicParam.key]
                 }
                 if (this.listSetting.paramName) {
                     params[this.listSetting.paramName] = data.row.guid

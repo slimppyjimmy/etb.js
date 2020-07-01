@@ -55,13 +55,13 @@
         methods: {
             //事件函数
             change: function (selectConfig) { //下拉框切换数据时触发
-            if(this.publicParam.hasOwnProperty(selectConfig.paramName)){
-            //    console.log(selectConfig.paramName)
-            //    console.log(this.params[selectConfig.paramName])
-               this.$store.getters.publicParams[selectConfig.paramName]=this.params[selectConfig.paramName]
-           }
+                if (this.publicParam.hasOwnProperty(selectConfig.paramName)) {
+                    //    console.log(selectConfig.paramName)
+                    //    console.log(this.params[selectConfig.paramName])
+                    this.$store.getters.publicParams[selectConfig.paramName] = this.params[selectConfig.paramName]
+                }
                 this.toSearch()
-                
+
             },
             handleSearchBarBtnClick: function (btnConfig) {
                 switch (btnConfig.function) {
@@ -84,8 +84,11 @@
 
                 if (btnConfig && btnConfig.params) {
                     //更具传入的parmas从vuex中获取值
-                    let value = this.$store.getters.cacheData[this.searchBar.target]
-                    params[btnConfig.params.key] = value[btnConfig.params.value]
+                    
+                        let value = this.$store.getters.cacheData[this.searchBar.target]
+                        params[btnConfig.params.key] = value[btnConfig.params.value]
+                    
+
                 } else {
                     params = this.params
                 }

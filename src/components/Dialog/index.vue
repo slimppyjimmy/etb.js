@@ -62,9 +62,6 @@
             <searchBar v-if="this.showSearchbar" :searchBar='this.searchbarSetting'></searchBar>
             <list-mnt v-if="this.showList" :listSetting='this.listSetting'></list-mnt>
         </slot>
-        <!-- <list-mnt
-            v-if='setting.config && setting.config.dialogSetting && setting.config.dialogSetting.listSetting? true:false'
-            :listSetting='setting.config.dialogSetting.listSetting' @reciveListData="reciveListData"></list-mnt> -->
         <span slot="footer" class="dialog-footer">
             <el-button type="primary" @click="submit" size="mini">确 定</el-button>
             <el-button @click="dialogVisible = false" size="mini">取 消</el-button>
@@ -116,20 +113,28 @@
                     return
                 }
                 let params = new Object
-
+                 
                 if (this.setting.config.dialogSetting.hasOwnProperty('executeParams')) { //组成需要附加在表单提交接口上的数
                     let executeParams = this.setting.config.dialogSetting.executeParams
                     executeParams.forEach((item) => {
-                        
-                        if (item.catchData) {
+                    
+                        if (item.cacheData) {
+                            
                             let cacheData=new Object;
                             cacheData=this.$store.getters.cacheData
-                            console.log(cacheData)
+                          
                             params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
                         }else if (item.publicParam) {
                                 params[item.key] = this.$store.getters.publicParams[item.key]
                             } 
                     })
+                }
+                if(this.setting.config.dialogSetting.hasOwnProperty('executeDefaultParams')){
+                     let executeDefaultParams = this.setting.config.dialogSetting.executeDefaultParams
+                     executeDefaultParams.forEach((item)=>{
+                         params[item.key]=item.value
+                     })
+
                 }
                 let postData = []
                 if (this.isString) {
@@ -154,7 +159,7 @@
 
                 if (this.multipleSelection.length > 0) {
                     postData = []
-
+                    console.log(1444444)
                     this.multipleSelection.forEach((item) => {
                         this.setting.config.dialogSetting.body.forEach((a) => {
                             postData.push(item[a])
@@ -263,16 +268,9 @@
                                     let mainDom=this.buildTree(this.prepareData[item
                                         .data], dataMap)
                                         mainDom.push(rootDom)
-                                        console.log(mainDom)
+                                      
                                     this.cascaderOptions = mainDom
         
-                                    //     console.log(this.cascaderOptions)
-                                    // if (Object.keys(this.cascaderOptions) == 0) {
-                                    //     this.cascaderOptions = [{
-                                    //         label: '根节点',
-                                    //         value: ''
-                                    //     }]
-                                    // }
                                 }
                                 if (item.isString) {
                                     this.isString = true
@@ -281,7 +279,9 @@
                                 this.$set(this.form, item.name, item.defaultValue ? item
                                     .defaultValue :
                                     this.prepareData[item.name])
+                                    
                                 if (Object.keys(this.loadData).length !== 0) {
+                                   
                                     this.$set(this.form, item.name, item.defaultValue ? item
                                         .defaultValue :
                                         this.loadData[item.name])
@@ -293,14 +293,24 @@
 
                     })
                 } else {
+                    
                     if (params.config.dialogSetting.hasOwnProperty('properties')) {
                         this.formSetting = params.config.dialogSetting.properties
                         params.config.dialogSetting.properties.forEach((item) => {
                             //TODO 对时间组件需要进行特殊处理
                             this.$set(this.form, item.name, item.defaultValue ? item.defaultValue :
                                 '')
+                                if (Object.keys(this.loadData).length !== 0) {
+                                    this.$set(this.form, item.name, item.defaultValue ? item
+                                        .defaultValue :
+                                        this.loadData[item.name])
+                                }
+                            
                         })
+                        
+                        
                     }
+                        this.loadData = {}
                     this.dialogVisible = true
                 }
 
@@ -335,8 +345,11 @@
                 this.multipleSelection = params.data
             },
             toLoadData: function (params) {
+                
+                
                 this.loadData = params.loadData
                 this.catchData = params.catchData
+               
                 this.initDialog(params)
 
             },

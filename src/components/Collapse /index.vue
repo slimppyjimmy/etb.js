@@ -1,5 +1,5 @@
 <template>
-    <el-col :span="this.collapseSetting.col? this.collapseSetting.col:12" v-show="collapseSetting.hide? true:!collapseSetting.hide">
+    <el-col :span="this.collapseSetting.col? this.collapseSetting.col:12" v-show="collapseSetting.hide? !collapseSetting.hide:true">
         <el-card shadow="none" :body-style="{ padding: '10px 10px 10px 10px',border:'none'}">
             <el-collapse v-model="activeNames" @change="handleChange">
                 <el-collapse-item v-for="(item,key) in collapseSetting.properties " :title="item.name" :name="key "
@@ -39,7 +39,18 @@
         methods: {
             handleChange(val) {},
             handleClick(config, data) {
-                if (config !== null) {
+                 console.log(12312312312)
+                 console.log(config)
+                 console.log(data)
+                 if (config.dialogSetting) {
+                    
+                    let data = new Object
+                    data.config = config
+                    data.config.guid = this.collapseSetting.guid
+                  
+                    this.$bus.emit(config.dialogSetting.target, data)
+                   
+                } else  {
                     this.$bus.emit(config.target, this.data)
                 }
             },

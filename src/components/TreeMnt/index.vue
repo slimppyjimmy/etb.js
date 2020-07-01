@@ -74,7 +74,6 @@
                 treeObj.expandAll(this.treeSetting.expandAll)
             },
             handleNodeClick: function (evnet, treeId, treeNode) {
-                
                 if (this.treeSetting.hasOwnProperty('event')) {
                     const gridEvent = this.treeSetting.event
                     if (gridEvent.rowClick) {
@@ -143,10 +142,19 @@
                 let params = {}
                 //判断是否携带params，打包数据
                 if (config.params) {
-                    for (let i in config.params) {
-                        let item = config.params[i]
-                        params[item.key] = node[item.value]
-                    }
+                    config.params.forEach((item) => {
+                            if (item.cacheData) {
+                                
+                               
+                                let cacheData = new Object;
+                                cacheData = this.$store.getters.cacheData
+                                params[item.key] = cacheData[Object.keys(cacheData)[0]][item.value]
+                            } else if (item.publicParam) {
+                                params[item.key] = this.$store.getters.publicParams[item.key]
+                            }else{
+                                params[item.key]=node[item.value]
+                            }
+                        })
                 }
                 let data = []
                 //判断是否携带body，打包数据

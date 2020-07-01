@@ -35,7 +35,8 @@
                     treeNodeData: ['fullName', 'guid', 'id', 'sortNo', 'state', 'stateName',
                         'parentGuid'
                     ], //tree节点携带的数据，可选项，不项则默认携带所有后台返回数据
-                    treeNodeButton: [{
+                    treeNodeButton: [
+                        {
                             name: "上移",
                             url: ":dasc/orgs/changeSortUp",
                             function: "modify",
@@ -379,58 +380,58 @@
                     paramName: "orgGuid",
                     grid: {
                         columns: [{
-                                label: '名称',
-                                data: 'roleName'
-                            },
-                        ],
-                        buttons:[
-                            {
-                                name:'上移',
-                                function:'modify',
-                                url:':dasc/orgs/changeStationRoleSortUp',
-                                method:'post',
-                                body:['guid'],
-                                params:[{
-                                    catchData:true,
-                                    key:'orgGuid',
-                                    value:'guid'
-                                },
-                                {
-                                    key:'roleGuid',
-                                    value:'guid'
-                                }]
-                            } ,
-                            {
-                                name:'下移',
-                                function:'modify',
-                                url:':dasc/orgs/chanegOrgRoleSortNoDown',
-                                body:['guid'],
-                                method:'post',
-                                params:[{
-                                    catchData:true,
-                                    key:'orgGuid',
-                                    value:'guid'
-                                },
-                                {
-                                    key:'roleGuid',
-                                    value:'guid'
-                                }]
+                            label: '名称',
+                            data: 'roleName'
+                        }, ],
+                        buttons: [{
+                                name: '上移',
+                                function: 'modify',
+                                url: ':dasc/orgs/changeStationRoleSortUp',
+                                method: 'post',
+                                body: ['guid'],
+                                params: [{
+                                        catchData: true,
+                                        key: 'orgGuid',
+                                        value: 'guid'
+                                    },
+                                    {
+                                        key: 'roleGuid',
+                                        value: 'guid'
+                                    }
+                                ]
                             },
                             {
-                                name:'取消关联',
-                                function:'remove',
-                                url:':dasc/orgs/deleteStationRoles',
-                                params:[{
-                                    catchData:true,
-                                    key:'orgGuid',
-                                    value:'guid'
+                                name: '下移',
+                                function: 'modify',
+                                url: ':dasc/orgs/chanegOrgRoleSortNoDown',
+                                body: ['guid'],
+                                method: 'post',
+                                params: [{
+                                        catchData: true,
+                                        key: 'orgGuid',
+                                        value: 'guid'
+                                    },
+                                    {
+                                        key: 'roleGuid',
+                                        value: 'guid'
+                                    }
+                                ]
+                            },
+                            {
+                                name: '取消关联',
+                                function: 'remove',
+                                url: ':dasc/orgs/deleteStationRoles',
+                                params: [{
+                                    catchData: true,
+                                    key: 'orgGuid',
+                                    value: 'guid'
                                 }],
-                                body:['guid'],
-                                confirm:{
-                                    tip:'确认取消关联？',
-                                    success:'取消成功'
+                                body: ['guid'],
+                                confirm: {
+                                    tip: '确认取消关联？',
+                                    success: '取消成功'
                                 },
-                                method:'post'
+                                method: 'post'
                             }
                         ]
                     }
@@ -449,7 +450,7 @@
                                 executeUrl: ':dasc/orgs/addStationRoles', //提交地址
                                 executeMethod: 'post',
                                 executeParams: [{
-                                    catchData:true,
+                                    catchData: true,
                                     key: 'orgGuid',
                                     value: 'guid'
                                 }],
@@ -487,10 +488,9 @@
                                     col: 24,
                                     grid: {
                                         columns: [{
-                                                lable: '名称',
-                                                data: 'roleName',
-                                            },
-                                        ]
+                                            lable: '名称',
+                                            data: 'roleName',
+                                        }, ]
                                     },
                                     pagination: {
                                         size: 10
@@ -518,8 +518,8 @@
                 dialogSetting1: {
                     guid: '7e0d0adb-7e53-4b97-a174-1daa2e697126'
                 },
-                dialogSetting2:{
-                    guid:'51a30b0b-ef9e-43b0-bb77-e95a6b4782e7'
+                dialogSetting2: {
+                    guid: '51a30b0b-ef9e-43b0-bb77-e95a6b4782e7'
                 }
             }
         }

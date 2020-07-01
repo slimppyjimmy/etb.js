@@ -285,7 +285,7 @@
                 },
                 dialogSetting1: {
                     guid: '39210bab-8cac-4de5-a673-dc8d35beac73'
-                },
+                }
             }
         }
     }
